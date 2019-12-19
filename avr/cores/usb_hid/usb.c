@@ -80,7 +80,7 @@ static const uint8_t PROGMEM device_descriptor[] = {
 };
 
 // Keyboard Protocol 1, HID 1.11 spec, Appendix B, page 59-60
-static const uint8_t PROGMEM keyboard_hid_report_desc[] = {
+/*static const uint8_t PROGMEM keyboard_hid_report_desc[] = {
         0x05, 0x01,             //  Usage Page (Generic Desktop),
         0x09, 0x06,             //  Usage (Keyboard),
         0xA1, 0x01,             //  Collection (Application),
@@ -113,6 +113,45 @@ static const uint8_t PROGMEM keyboard_hid_report_desc[] = {
         0x29, 0x7F,             //  Usage Maximum (104),
         0x81, 0x00,             //  Input (Data, Array),		;Normal keys
         0xc0			// End Collection
+}*/;
+
+// Keyboard Protocol, HID 1.11 Spec NON-BOOT
+static const uint8_t PROGMEM keyboard_hid_report_desc[] = {
+	0x05, 0x01,										// Usage Page (Generic Desktop),
+	0x09, 0x06,										// Usage (Keyboard),
+	0xA1, 0x01,										// Collection (Application),
+	// Modifier Keys
+	0x05, 0x07,											// Usage Page (Key Codes),
+	0x19, 0xE0,											// Usage Minimum (224),
+	0x29, 0xE7,											// Usage Maximum (231),
+	0x15, 0x00,											// Logical Minimum (0),
+	0x25, 0x01,											// Logical Maximum (1),
+	0x75, 0x01,											// Report Size (1),
+	0x95, 0x08,											// Report Count (8),
+	0x81, 0x02,											// Input (Data, Variable, Absolute),				;Modifier byte (0)
+	// LEDS
+	0x05, 0x08,											// Usage Page (LEDs),
+	0x19, 0x01,											// Usage Minimum (1),
+	0x29, 0x05,											// Usage Maximum (5),
+	0x75, 0x01,											// Report Size (1),
+	0x95, 0x05,											// Report Count (5),
+	0x91, 0x02,											// Output (Data, Variable, Absolute),				;LED Report (5/8)
+	0x75, 0x03,											// Report Size (3),
+	0x95, 0x01,											// Report Count (1),
+	0x91, 0x03,											// Output (Constant, Variable, Absolute),			;LED Report padding (8/8)
+	// Keys
+	0x05, 0x07,											// Usage Page (Key Codes),
+	0x19, 0x00,											// Usage Minimum (0),
+	0x29, KEYBOARD_KEYCOUNT - 1,							// Usage Maximum (103),
+	0x15, 0x00,											// Logical Minimum (0),
+	0x25, 0x01,											// Logical Maximum (1),
+	0x75, 0x01,											// Report Size (1),
+	0x95, KEYBOARD_KEYCOUNT,								// Report Count (104),
+	0x81, 0x02,											// Input (Data, Variable, Absolute),				;Key byte (1-13)
+	0x75, 0x08,											// Report Size (8),
+	0x95, 0x02,											// Report Count (2),
+	0x81, 0x03,											// Input (Constant, Variable, Absolute),			;Key byte padding (14-15)
+	0xC0											// End Collection
 };
 
 static const uint8_t PROGMEM keymedia_hid_report_desc[] = {
@@ -517,7 +556,7 @@ volatile uint8_t debug_flush_timer USBSTATE;
 //  16=right ctrl, 32=right shift, 64=right alt, 128=right gui
 // byte1: media keys (TODO: document these)
 // bytes2-7: which keys are currently pressed, up to 6 keys may be down at once
-uint8_t keyboard_report_data[8] USBSTATE;
+uint8_t keyboard_report_data[KEYBOARD_SIZE] USBSTATE;
 
 // protocol setting from the host.  We use exactly the same report
 // either way, so this variable only stores the setting since we
@@ -563,7 +602,7 @@ uint8_t keymedia_system_keys[3] USBSTATE;
 // initialize USB serial
 void usb_init(void)
 {
-	uint8_t u;
+	uint8_t u, i;
 
 	u = USBCON;
 	if ((u & (1<<USBE)) && !(u & (1<<FRZCLK))) return;
@@ -576,14 +615,9 @@ void usb_init(void)
 	usb_configuration = 0;
 	usb_suspended = 0;
 	debug_flush_timer = 0;
-	keyboard_report_data[0] = 0;
-	keyboard_report_data[1] = 0;
-	keyboard_report_data[2] = 0;
-	keyboard_report_data[3] = 0;
-	keyboard_report_data[4] = 0;
-	keyboard_report_data[5] = 0;
-	keyboard_report_data[6] = 0;
-	keyboard_report_data[7] = 0;
+	for (i = 0; i < KEYBOARD_SIZE; i++) {
+		keyboard_report_data[i] = 0;
+	}
 	keyboard_protocol = 1;
 	keyboard_idle_config = 125;
 	keyboard_idle_count = 0;

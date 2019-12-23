@@ -36,23 +36,58 @@ void usb_keyboard_class::pressModifier(uint8_t code) {
 void usb_keyboard_class::releaseModifier(uint8_t code) {
 	keyboard_report_data[0] &= ~(code);
 }
-
+/*
 void usb_keyboard_class::pressKey(uint8_t code) {
 	if ((code >> 3) < KEYBOARD_SIZE - 2) {
 		keyboard_report_data[(code >> 3) + 1] |= 1 << (code & 7);
-	}
+	}  
 }
 
 void usb_keyboard_class::releaseKey(uint8_t code) {
 	if ((code >> 3) < KEYBOARD_SIZE - 2) {
 		keyboard_report_data[(code >> 3) + 1] &= ~(1 << (code & 7));
-	}
+        }
 }
 
 void usb_keyboard_class::releaseAll(void) {
 	for (uint8_t i = 0; i < KEYBOARD_SIZE; i++) {
 		keyboard_report_data[i] = 0;
 	}
+}*/
+
+void usb_keyboard_class::releaseAll(void) {
+	uint8_t index;
+	for (index=0; index < KEYBOARD_SIZE; index++)
+	{
+		keyboard_report_data[index] = 0;
+	}
+}
+
+void usb_keyboard_class::releaseKey(uint8_t usb_keycode) {
+	uint8_t bit = usb_keycode % 8;
+	uint8_t byte = (usb_keycode / 8) + 1;
+
+	if (usb_keycode >= 240 && usb_keycode <= 247) {
+		 // Reset a modifier key
+			 keyboard_report_data[0] &= ~(1<< bit);
+		 }
+	 else if (byte > 0 && byte <= KEYBOARD_REPORT)
+	 {
+		 keyboard_report_data[byte] &= ~(1 << bit);
+	 }
+}
+
+void usb_keyboard_class::pressKey(uint8_t usb_keycode) {
+	uint8_t bit = usb_keycode % 8;
+	uint8_t byte = (usb_keycode / 8) + 1;
+
+ 	if (usb_keycode >= 240 && usb_keycode <= 247) {
+	 // Reset a modifier key
+		 keyboard_report_data[0] |= (1<< bit);
+ 	}
+	 else if (byte > 0 && byte <= KEYBOARD_REPORT) {
+		 keyboard_report_data[byte] |= (1 << bit);
+	 }
 }
 
 void usb_keyboard_class::send(void) {
@@ -387,6 +422,7 @@ usb_serial_class::operator bool()
 
 usb_serial_class	Serial = usb_serial_class();
 usb_keyboard_class	Keyboard = usb_keyboard_class();
-usb_joystick_class	Joystick = usb_joystick_class(JOYSTICK_INTERFACE, JOYSTICK_ENDPOINT, JOYSTICK_SIZE, joystick_report_data);
-usb_joystick_class	Joystick2 = usb_joystick_class(JOYSTICK2_INTERFACE, JOYSTICK2_ENDPOINT, JOYSTICK2_SIZE, joystick2_report_data);
+// Ugly Hack to invert Joysticks order
+usb_joystick_class	Joystick2 = usb_joystick_class(JOYSTICK_INTERFACE, JOYSTICK_ENDPOINT, JOYSTICK_SIZE, joystick_report_data);
+usb_joystick_class	Joystick = usb_joystick_class(JOYSTICK2_INTERFACE, JOYSTICK2_ENDPOINT, JOYSTICK2_SIZE, joystick2_report_data);
 

@@ -154,6 +154,33 @@ static const uint8_t PROGMEM keyboard_hid_report_desc[] = {
 	0xC0											// End Collection
 };
 
+/*static uint8_t keyboard_hid_report_desc[] = {
+ 0x05, 0x01, // Usage Page (Generic Desktop),
+ 0x09, 0x06, // Usage (Keyboard),
+ 0xA1, 0x01, // Collection (Application),
+ // bitmap of modifiers
+ 0x75, 0x01, // Report Size (1),
+ 0x95, 0x08, // Report Count (8),
+ 0x05, 0x07, // Usage Page (Key Codes),
+ 0x19, 0xE0, // Usage Minimum (224),
+ 0x29, 0xE7, // Usage Maximum (231),
+ 0x15, 0x00, // Logical Minimum (0),
+ 0x25, 0x01, // Logical Maximum (1),
+ 0x81, 0x02, // Input (Data, Variable, Absolute), ;Modifier byte
+ // bitmap of keys
+ 0x95, KEYBOARD_REPORT*8, // Report Count (),
+ 0x75, 0x01, // Report Size (1),
+ 0x15, 0x00, // Logical Minimum (0),
+ 0x25, 0x01, // Logical Maximum(1),
+ 0x05, 0x07, // Usage Page (Key Codes),
+ 0x19, 0x00, // Usage Minimum (0),
+ 0x29, KEYBOARD_REPORT*8-1, // Usage Maximum (),
+ 0x81, 0x02, // Input (Data, Variable, Absolute),
+ 0xc0 // End Collection
+};
+*/
+
+
 static const uint8_t PROGMEM keymedia_hid_report_desc[] = {
         0x05, 0x0C,             //  Usage Page (Consumer)
         0x09, 0x01,             //  Usage (Consumer Controls)
@@ -556,7 +583,7 @@ volatile uint8_t debug_flush_timer USBSTATE;
 //  16=right ctrl, 32=right shift, 64=right alt, 128=right gui
 // byte1: media keys (TODO: document these)
 // bytes2-7: which keys are currently pressed, up to 6 keys may be down at once
-uint8_t keyboard_report_data[KEYBOARD_SIZE] USBSTATE;
+uint8_t keyboard_report_data[KEYBOARD_REPORT] USBSTATE;
 
 // protocol setting from the host.  We use exactly the same report
 // either way, so this variable only stores the setting since we
@@ -615,7 +642,7 @@ void usb_init(void)
 	usb_configuration = 0;
 	usb_suspended = 0;
 	debug_flush_timer = 0;
-	for (i = 0; i < KEYBOARD_SIZE; i++) {
+	for (i = 0; i < KEYBOARD_REPORT; i++) {
 		keyboard_report_data[i] = 0;
 	}
 	keyboard_protocol = 1;
@@ -724,7 +751,7 @@ ISR(USB_GEN_vect)
                                 if (keyboard_idle_count == keyboard_idle_config) {
                                         keyboard_idle_count = 0;
 					//len = keyboard_protocol ? sizeof(keyboard_keys) : 8;
-                                        for (i=0; i < 8; i++) {
+                                        for (i=0; i < KEYBOARD_SIZE; i++) {
                                                 UEDATX = keyboard_report_data[i];
                                         }
                                         UEINTX = 0x3A;
@@ -912,7 +939,7 @@ ISR(USB_COM_vect)
                                 if (bRequest == HID_GET_REPORT) {
                                         usb_wait_in_ready();
 					//len = keyboard_protocol ? sizeof(keyboard_keys) : 8;
-                                        for (i=0; i < 8; i++) {
+                                        for (i=0; i < KEYBOARD_REPORT; i++) {
                                                 UEDATX = keyboard_report_data[i];
                                         }
                                         usb_send_in();

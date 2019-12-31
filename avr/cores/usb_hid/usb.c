@@ -584,6 +584,7 @@ volatile uint8_t debug_flush_timer USBSTATE;
 // byte1: media keys (TODO: document these)
 // bytes2-7: which keys are currently pressed, up to 6 keys may be down at once
 uint8_t keyboard_report_data[KEYBOARD_REPORT] USBSTATE;
+//uint8_t keyboard_report_data[KEYBOARD_SIZE] USBSTATE;
 
 // protocol setting from the host.  We use exactly the same report
 // either way, so this variable only stores the setting since we
@@ -751,7 +752,7 @@ ISR(USB_GEN_vect)
                                 if (keyboard_idle_count == keyboard_idle_config) {
                                         keyboard_idle_count = 0;
 					//len = keyboard_protocol ? sizeof(keyboard_keys) : 8;
-                                        for (i=0; i < KEYBOARD_SIZE; i++) {
+                                        for (i=0; i < KEYBOARD_REPORT; i++) {
                                                 UEDATX = keyboard_report_data[i];
                                         }
                                         UEINTX = 0x3A;
